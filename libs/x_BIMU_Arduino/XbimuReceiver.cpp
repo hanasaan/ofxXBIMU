@@ -49,18 +49,23 @@ bool batteryGetReady = false;
 XbimuReceiver::XbimuReceiver() {
 }
 
-void XbimuReceiver::processNewChar(unsigned char c) {
+void XbimuReceiver::processNewChar(char c) {
+    decodeBinary(c);
+    decodeASCII(c);
+}
 
+void XbimuReceiver::decodeBinary(char c) {
+    
     // Add new byte to buffer
     buf[bufIndex++] = c;
-
+    
     // Check if out of sync
     bufCount++;
     if (bufCount > MAX_LENGTH) {
         bufCount = MAX_LENGTH; // prevent overflow
         inSync = false;
     }
-
+    
     // Decode quaternion packet
     if (bufIndex >= QUAT_LENGTH) {
         if ((inSync ? (char)buf[0] : (char)buf[bufIndex - QUAT_LENGTH]) == 'Q') {
@@ -77,7 +82,7 @@ void XbimuReceiver::processNewChar(unsigned char c) {
             }
         }
     }
-
+    
     // Decode sensor packet
     if (bufIndex >= SENS_LENGTH) {
         if ((inSync ? (char)buf[0] : (char)buf[bufIndex - SENS_LENGTH]) == 'S') {
@@ -99,7 +104,7 @@ void XbimuReceiver::processNewChar(unsigned char c) {
             }
         }
     }
-
+    
     // Decode battery packet
     if (bufIndex >= BATT_LENGTH) {
         if ((inSync ? (char)buf[0] : (char)buf[bufIndex - BATT_LENGTH]) == 'B') {
@@ -113,7 +118,68 @@ void XbimuReceiver::processNewChar(unsigned char c) {
             }
         }
     }
+    
 }
+
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+stringstream ss;
+
+vector<string> split(const string &str, char delim){
+    istringstream iss(str); string tmp; vector<string> res;
+    while(getline(iss, tmp, delim)) res.push_back(tmp);
+    return res;
+}
+
+void XbimuReceiver::decodeASCII(char c) {
+    if (c == '\r')
+    {
+        vector<string> vars = split(ss.str(), ',');
+        
+        // TODO Checksum
+        
+        if (vars[0] == "Q") {
+            quaternionStruct.w = atoi(vars[1].c_str());
+            quaternionStruct.x = atoi(vars[2].c_str());
+            quaternionStruct.y = atoi(vars[3].c_str());
+            quaternionStruct.z = atoi(vars[4].c_str());
+            quaternionStruct.counter = atoi(vars[5].c_str());
+            quaternionGetReady = true;
+        }
+        else if (vars[0] == "S") {
+            sensorStruct.gyrX = atoi(vars[1].c_str());
+            sensorStruct.gyrY = atoi(vars[2].c_str());
+            sensorStruct.gyrZ = atoi(vars[3].c_str());
+            sensorStruct.accX = atoi(vars[4].c_str());
+            sensorStruct.accY = atoi(vars[5].c_str());
+            sensorStruct.accZ = atoi(vars[6].c_str());
+            sensorStruct.magX = atoi(vars[7].c_str());
+            sensorStruct.magY = atoi(vars[8].c_str());
+            sensorStruct.magZ = atoi(vars[9].c_str());
+            sensorStruct.counter = atoi(vars[10].c_str());
+            sensorGetReady = true;
+        }
+        else if (vars[0] == "B") {
+            batteryStruct.voltage = atoi(vars[1].c_str());
+            batteryStruct.counter = atoi(vars[2].c_str());
+            batteryGetReady = true;
+        }
+        
+        // clear buffer
+        ss.str("");
+        ss.clear(stringstream::goodbit);
+    }
+    else
+    {
+        ss << c;
+    }
+}
+
 
 unsigned char XbimuReceiver::calcChecksum(unsigned char packetLength) const {
     unsigned char tempRxBufIndex = (unsigned char)(bufIndex - packetLength);

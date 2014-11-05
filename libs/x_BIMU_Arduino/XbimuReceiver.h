@@ -47,7 +47,7 @@ typedef struct {
 class XbimuReceiver {
     public:
         XbimuReceiver(void);
-        void processNewChar(unsigned char c);
+        void processNewChar(char c);
         bool isQuaternionGetReady(void) const;
         bool isSensorGetReady(void) const;
         bool isBatteryGetReady(void) const;
@@ -67,6 +67,10 @@ class XbimuReceiver {
         bool sensorGetReady;
         bool batteryGetReady;
         unsigned char calcChecksum(unsigned char packetLength) const;
+    
+    // mod
+        void decodeBinary(char c);
+        void decodeASCII(char c);
 };
 
 #endif
