@@ -10,14 +10,12 @@
 #include "XbimuReceiver.h"
 
 static inline float toFloat(int fixedQ115) {
-//    bool sign = ((fixedQ115 >> 15) & 0x01) == 0x01;
-//    float f = (fixedQ115 & 0x7fff) / (float)(0x8000);
-//    if (sign) {
-//        return f;
-//    } else {
-//        return -f;
-//    }
-    return 0.0001f * fixedQ115;
+    bool sign = ((fixedQ115 >> 15) & 0x01) == 0x01;
+    if (sign) {
+        return 0.0001f * (fixedQ115 - 65535);
+    } else {
+        return 0.0001f * fixedQ115;
+    }
 }
 
 QuaternionStruct quat;
@@ -96,18 +94,23 @@ ofQuaternion ofxXBIMU::getRotation() {
     return q;
 }
 
+ofQuaternion ofxXBIMU::getYupRotation() {
+    ofQuaternion rot = getRotation();
+    return ofQuaternion(90, ofVec3f(1, 0, 0)) * rot.conj() * ofQuaternion(-90, ofVec3f(1, 0, 0));
+}
+
 ofVec3f ofxXBIMU::getAcc() {
-    ofVec3f v = ofVec3f(sensor.accX, sensor.accY, sensor.accZ);
+    ofVec3f v = ofVec3f(toFloat(sensor.accX), toFloat(sensor.accY), toFloat(sensor.accZ));
     return v;
 }
 
 ofVec3f ofxXBIMU::getGyro() {
-    ofVec3f v = ofVec3f(sensor.gyrX, sensor.gyrY, sensor.gyrZ);
+    ofVec3f v = ofVec3f(toFloat(sensor.gyrX), toFloat(sensor.gyrY), toFloat(sensor.gyrZ));
     return v;
 }
 
 ofVec3f ofxXBIMU::getMag() {
-    ofVec3f v = ofVec3f(sensor.magX, sensor.magY, sensor.magZ);
+    ofVec3f v = ofVec3f(toFloat(sensor.magX), toFloat(sensor.magY), toFloat(sensor.magZ));
     return v;
 }
 

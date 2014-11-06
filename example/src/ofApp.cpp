@@ -10,49 +10,61 @@ class ofApp : public ofBaseApp{
     int batt;
     
     ofEasyCam ecam;
+    ofCamera cam;
     ofLight light0;
+    bool bDebugDraw;
 public:
     void setup()
     {
         ofSetVerticalSync(true);
         ofSetFrameRate(60);
-        
         xbimu.setup("/dev/tty.usbserial-00001014");
+        bDebugDraw = false;
     }
     
     void update()
     {
-        rot = xbimu.getRotation();
+        rot = xbimu.getYupRotation();
         acc = xbimu.getAcc();
         gyr = xbimu.getGyro();
         mag = xbimu.getMag();
         batt = xbimu.getBattery();
+        
+        cam.setGlobalOrientation(rot);
+        cam.setPosition(50, 50, 50);
     }
     
     void draw()
     {
         ofClear(0);
         
-        ecam.begin();
-        ofDrawAxis(300);
-        
-        ofPushStyle();
-        ofEnableDepthTest();
-        ofEnableLighting();
-        light0.setPosition(100, 1000, 1000);
-        light0.enable();
-        
-        ofPushMatrix();
-        ofMultMatrix(ofMatrix4x4(rot.conj()));
-        ofDrawBox(200);
-        ofDrawAxis(200);
-        ofPopMatrix();
-        
-        ofDisableLighting();
-        ofDisableDepthTest();
-        ofPopStyle();
-        
-        ecam.end();
+        if (!bDebugDraw) {
+            ecam.begin();
+            ofDrawAxis(300);
+            
+            ofPushStyle();
+            ofEnableDepthTest();
+            ofEnableLighting();
+            light0.setPosition(100, 1000, 1000);
+            light0.enable();
+            
+            ofPushMatrix();
+            ofMultMatrix(cam.getGlobalTransformMatrix());
+            ofDrawBox(200);
+            ofDrawAxis(200);
+            ofPopMatrix();
+            
+            ofDisableLighting();
+            ofDisableDepthTest();
+            ofPopStyle();
+            
+            ecam.end();
+        } else {
+            cam.begin();
+            ofDrawGrid(100);
+            ofDrawAxis(100);
+            cam.end();
+        }
         
         {
             stringstream ss;
@@ -65,15 +77,12 @@ public:
         }
     }
     
-    void keyPressed(int key) {}
-    void keyReleased(int key) {}
-    void mouseMoved(int x, int y ) {}
-    void mouseDragged(int x, int y, int button) {}
-    void mousePressed(int x, int y, int button) {}
-    void mouseReleased(int x, int y, int button) {}
-    void windowResized(int w, int h) {}
-    void dragEvent(ofDragInfo dragInfo) {}
-    void gotMessage(ofMessage msg) {}
+    void keyPressed(int key)
+    {
+        if (key == OF_KEY_RETURN) {
+            bDebugDraw = !bDebugDraw;
+        }
+    }
 };
 
 //========================================================================

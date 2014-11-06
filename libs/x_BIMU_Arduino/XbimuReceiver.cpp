@@ -143,7 +143,7 @@ void XbimuReceiver::decodeASCII(char c) {
         
         // TODO Checksum
         
-        if (vars[0] == "Q") {
+        if (vars.size() >= 6 && vars[0] == "Q") {
             quaternionStruct.w = atoi(vars[1].c_str());
             quaternionStruct.x = atoi(vars[2].c_str());
             quaternionStruct.y = atoi(vars[3].c_str());
@@ -151,7 +151,7 @@ void XbimuReceiver::decodeASCII(char c) {
             quaternionStruct.counter = atoi(vars[5].c_str());
             quaternionGetReady = true;
         }
-        else if (vars[0] == "S") {
+        else if (vars.size() >= 11 && vars[0] == "S") {
             sensorStruct.gyrX = atoi(vars[1].c_str());
             sensorStruct.gyrY = atoi(vars[2].c_str());
             sensorStruct.gyrZ = atoi(vars[3].c_str());
@@ -164,7 +164,7 @@ void XbimuReceiver::decodeASCII(char c) {
             sensorStruct.counter = atoi(vars[10].c_str());
             sensorGetReady = true;
         }
-        else if (vars[0] == "B") {
+        else if (vars.size() >= 3 && vars[0] == "B") {
             batteryStruct.voltage = atoi(vars[1].c_str());
             batteryStruct.counter = atoi(vars[2].c_str());
             batteryGetReady = true;
@@ -177,6 +177,12 @@ void XbimuReceiver::decodeASCII(char c) {
     else
     {
         ss << c;
+        
+        if (ss.str().length() > 512) {
+            // clear buffer
+            ss.str("");
+            ss.clear(stringstream::goodbit);
+        }
     }
 }
 

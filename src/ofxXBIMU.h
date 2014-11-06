@@ -22,6 +22,7 @@ public:
     
     bool isOpen() const;
     ofQuaternion getRotation();
+    ofQuaternion getYupRotation();
     ofVec3f getAcc();
     ofVec3f getGyro();
     ofVec3f getMag();
