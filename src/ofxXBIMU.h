@@ -28,6 +28,7 @@ public:
     ofVec3f getMag();
     int getBattery();
     
+    bool isConnected() const;
 protected:
     void threadedFunction();
     
@@ -35,4 +36,6 @@ protected:
     
     ofSerial serial;
     bool serialOpen;
+    
+    uint64_t lastReceivedTs;
 };

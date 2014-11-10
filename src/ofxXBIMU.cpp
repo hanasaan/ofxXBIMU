@@ -27,6 +27,7 @@ ofxXBIMU::ofxXBIMU() : impl(NULL)
 {
     impl = new XbimuReceiver();
     serialOpen = false;
+    lastReceivedTs = 0;
 }
 
 ofxXBIMU::~ofxXBIMU()
@@ -67,6 +68,7 @@ void ofxXBIMU::threadedFunction()
             impl->processNewChar(c);
             if (impl->isQuaternionGetReady()) {
                 quat = impl->getQuaternion();
+                lastReceivedTs = ofGetElapsedTimeMillis();
             }
             if (impl->isSensorGetReady()) {
                 sensor = impl->getSensor();
@@ -83,6 +85,11 @@ void ofxXBIMU::threadedFunction()
 bool ofxXBIMU::isOpen() const
 {
     return serialOpen;
+}
+
+bool ofxXBIMU::isConnected() const
+{
+    return (ofGetElapsedTimeMillis() - lastReceivedTs) < 1000;
 }
 
 ofQuaternion ofxXBIMU::getRotation() {
